@@ -1,10 +1,23 @@
-import { OpenAI } from 'langchain/llms/openai';
+import { OpenAIChat } from 'langchain/llms/openai';
 import { PromptTemplate } from 'langchain/prompts';
 import { loadQARefineChain } from 'langchain/chains';
 
 import { StructuredOutputParser, OutputFixingParser } from 'langchain/output_parsers';
 import { Document } from 'langchain/document';
 import { z } from 'zod';
+
+// The LLM provider is OpenAI-API-compatible. Base URL and model come from the
+// environment so the key's provider (Groq by default) can be swapped without
+// code changes. OpenAIChat forces the chat endpoint for any model name.
+const makeModel = () =>
+  new OpenAIChat(
+    {
+      temperature: 0,
+      modelName: process.env.LLM_MODEL ?? 'openai/gpt-oss-20b',
+      openAIApiKey: process.env.OPENAI_API_KEY,
+    },
+    { basePath: process.env.LLM_BASE_URL ?? 'https://api.groq.com/openai/v1' },
+  );
 
 const parser = StructuredOutputParser.fromZodSchema(
   z.object({
@@ -44,13 +57,13 @@ const getPrompt = async (content) => {
 
 export const analyzeEntry = async (entry) => {
   const input = await getPrompt(entry.content);
-  const model = new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' });
+  const model = makeModel();
   const output = await model.call(input);
 
   try {
     return parser.parse(output);
   } catch (e) {
-    const fixParser = OutputFixingParser.fromLLM(new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' }), parser);
+    const fixParser = OutputFixingParser.fromLLM(makeModel(), parser);
     const fix = await fixParser.parse(output);
     return fix;
   }
@@ -69,7 +82,7 @@ export const qa = async (question, entries) => {
     return 'No journal entries yet. Write an entry first, then ask a question.';
   }
 
-  const model = new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' });
+  const model = makeModel();
   const chain = loadQARefineChain(model);
   const res = await chain.call({
     input_documents: docs,
