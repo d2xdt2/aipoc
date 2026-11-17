@@ -44,13 +44,13 @@ const getPrompt = async (content) => {
 
 export const analyzeEntry = async (entry) => {
   const input = await getPrompt(entry.content);
-  const model = new OpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo' });
+  const model = new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' });
   const output = await model.call(input);
 
   try {
     return parser.parse(output);
   } catch (e) {
-    const fixParser = OutputFixingParser.fromLLM(new OpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo' }), parser);
+    const fixParser = OutputFixingParser.fromLLM(new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' }), parser);
     const fix = await fixParser.parse(output);
     return fix;
   }
@@ -69,7 +69,7 @@ export const qa = async (question, entries) => {
     return 'No journal entries yet. Write an entry first, then ask a question.';
   }
 
-  const model = new OpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo' });
+  const model = new OpenAI({ temperature: 0, modelName: 'gpt-4o-mini' });
   const chain = loadQARefineChain(model);
   const res = await chain.call({
     input_documents: docs,
