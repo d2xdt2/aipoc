@@ -24,7 +24,6 @@ model Account {
   id               String @id @default(uuid())
   userId           String
   user             User   @relation(fields: [userId], references: [id])
-  // stripeCustomerId String @unique
 
   @@unique([userId])
 }

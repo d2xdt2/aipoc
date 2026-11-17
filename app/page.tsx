@@ -2,8 +2,11 @@ import { auth } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export default async function Home() {
-  const { userId } = await auth();
-  let href = userId ? '/journal' : '/new-user';
+  await auth();
+  // Always route through /new-user: it provisions the DB row if missing, then
+  // redirects to /journal. Guards against a 500 when the DB is fresh but the
+  // Clerk account already exists.
+  const href = '/new-user';
 
   return (
     <div className="w-screen h-screen bg-black flex justify-center items-center text-white">

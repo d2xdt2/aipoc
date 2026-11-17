@@ -3,6 +3,8 @@ import { getUserFromClerkID } from '@/util/auth';
 import { prisma } from '@/util/db';
 import { NextResponse } from 'next/server';
 
+export const maxDuration = 60;
+
 export const POST = async (request) => {
   const { question } = await request.json();
   const user = await getUserFromClerkID();
